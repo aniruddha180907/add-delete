@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .task-container {
+            margin-top: 20px;
+        }
+        .task {
+            margin-bottom: 10px;
+        }
+        .task input {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container task-container">
+        <h1 class="text-center">Task Manager</h1>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <input type="text" id="task-input" class="form-control" placeholder="Enter task">
+                </div>
+                <button id="add-task-btn" class="btn btn-primary w-100">Add Task</button>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6 offset-md-3">
+                <ul id="task-list" class="list-group">
+                    <!-- Tasks will appear here dynamically -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Load tasks from localStorage on page load
+            loadTasks();
+
+            // Add Task
+            $('#add-task-btn').on('click', function () {
+                const taskText = $('#task-input').val().trim();
+                if (taskText !== '') {
+                    const tasks = getTasksFromLocalStorage();
+                    const newTask = { text: taskText, id: new Date().getTime() }; // Generate a unique ID using timestamp
+                    tasks.push(newTask);
+                    saveTasksToLocalStorage(tasks);
+                    $('#task-input').val(''); // Clear input
+                    loadTasks(); // Reload task list
+                }
+            });
+
+            // Edit Task
+            $(document).on('click', '.edit-btn', function () {
+                const taskId = $(this).data('id');
+                const tasks = getTasksFromLocalStorage();
+                const task = tasks.find(t => t.id === taskId);
+                $('#task-input').val(task.text); // Pre-fill the input with task text
+                deleteTask(taskId); // Remove the task before editing
+            });
+
+            // Delete Task
+            $(document).on('click', '.delete-btn', function () {
+                const taskId = $(this).data('id');
+                deleteTask(taskId);
+            });
+
+            // Function to get tasks from localStorage
+            function getTasksFromLocalStorage() {
+                const tasks = localStorage.getItem('tasks');
+                return tasks ? JSON.parse(tasks) : [];
+            }
+
+            // Function to save tasks to localStorage
+            function saveTasksToLocalStorage(tasks) {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+            }
+
+            // Function to load and display tasks from localStorage
+            function loadTasks() {
+                const tasks = getTasksFromLocalStorage();
+                $('#task-list').empty(); // Clear current list
+                tasks.forEach(task => {
+                    $('#task-list').append(`
+                        <li class="list-group-item task d-flex justify-content-between align-items-center">
+                            <span>${task.text}</span>
+                            <div>
+                                <button class="btn btn-warning btn-sm edit-btn" data-id="${task.id}">Edit</button>
+                                <button class="btn btn-danger btn-sm delete-btn" data-id="${task.id}">Delete</button>
+                            </div>
+                        </li>
+                    `);
+                });
+            }
+
+            // Function to delete a task by ID
+            function deleteTask(taskId) {
+                const tasks = getTasksFromLocalStorage();
+                const updatedTasks = tasks.filter(task => task.id !== taskId);
+                saveTasksToLocalStorage(updatedTasks);
+                loadTasks(); // Reload tasks after deletion
+            }
+        });
+    </script>
+</body>
+</html>
